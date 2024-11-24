@@ -17,12 +17,12 @@ def closure_solve(x, y):
 
 # TODO: 梯度下降学习获取数学模型
 def gd_solve(tmp_x, y):
-    x = tmp_x 
-    x = (tmp_x - np.mean(tmp_x))/np.std(x)
+    x = tmp_x
+    x = (tmp_x - np.mean(tmp_x))/np.std(tmp_x)
     learning_rate=0.001 # 学习率
-    epochs=500 # 迭代轮数
+    epochs=10000 # 迭代轮数
     m = len(x)
-    a, b = 1.0, 0.0  # 初始化参数
+    a, b = 0.0, 0.0  # 初始化参数
 
     for _ in range(epochs):
         predictions = a + b * x
@@ -32,7 +32,7 @@ def gd_solve(tmp_x, y):
         b -= learning_rate * d_b # TODO:更新b
 
     def predict(p_x):
-        a_x  = (p_x - np.mean(tmp_x)) / np.std(x) 
+        a_x  = (p_x - np.mean(tmp_x)) / np.std(tmp_x) 
         p_y = a + b * a_x
         return p_y
     return predict #TODO: 函数curring返回预测模型
@@ -56,7 +56,7 @@ def main():
 
 
    # TODO: 梯度下降解
-   gd_predict = gd_solve(np.array(x), np.array(y))
+   gd_predict = gd_solve(np.array(x, dtype=np.float64), np.array(y, dtype=np.float64))
    print("梯度下降预测2014年房价: {:.3f}".format(gd_predict(2014)))
    # TODO: 绘制梯度下降解学习后数学模型
    plt.plot(x, [gd_predict(e) for e in x], c='green', label='梯度下降的预测模型')
