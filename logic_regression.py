@@ -6,7 +6,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 
 # TODO: open file and get data of given file
 def open_get(file):
@@ -43,27 +42,31 @@ def feature_scale(x):
 def get_cost(x, y, args):
     cost = 0
     for x_i, y_i in zip(x, y):
-        cost += -y_i * math.log(h(x_i, args)) - (1 - y_i) * math.log(1 - h(x_i, args))
+        cost += -y_i * np.log(h(x_i, args)) - (1 - y_i) * np.log(1 - h(x_i, args))
     return cost
 # TODO: calculate hypothesis model
 def h(x, args):
-   return 1 / (1 + math.exp(-x.dot(args))) 
+   return 1 / (1 + np.exp(-x.dot(args))) 
 
 # TODO: scale single sample features
 def single_sample_scale(x, train_x):
    x_mean = np.mean(train_x)
    return (x - x_mean) / (np.max(train_x) - np.min(train_x))
 
+def single_sample_ascale(x, train_x):
+    return (np.max(train_x) - np.min(train_x)) * x + np.mean(train_x)
 def gd_solve(tmp_x, y):
     # TODO: add first x of argx[0]
     x = np.array([np.concatenate([np.array([1]), x_i]) for x_i in tmp_x])
     # TODO: initialize basic arguments
     epoches = 10000
-    learn_rate = 0.001
+    learn_rate = 0.01
     args = np.zeros(x.shape[1])
     
     pre_cost = float("inf")
     current_cost = 0
+    cost_lst = []
+    iter_lst = [] 
     for i in range(epoches):
         gd = np.zeros(x.shape[1])
         for x_i, y_i in zip(x, y):
@@ -71,71 +74,81 @@ def gd_solve(tmp_x, y):
             
         args -= learn_rate * gd
         current_cost = get_cost(x, y, args)
+        cost_lst.append(current_cost)
+        iter_lst.append(i+1)
         if (i+1) % 1000 == 0: 
             print(f"{i+1}th epoch: current_cost = {current_cost}")
             print(f"args = {args}\n")
         if pre_cost < current_cost:
             break
 
+    plot_loss(iter_lst, cost_lst, 'loss trend of gradient descent')
     def predict(ori_x, train_x):
         scaled_x = [1]
         scaled_x.extend(single_sample_scale(ori_x, train_x)) 
-        print(f"scaled_x = {scaled_x}\n")
         return 1.0 if args.dot(scaled_x) > 0 else 0.0
-    return predict
+    return predict, args
 
-def plot_training_set(tmp_x, tmp_y):
+def plot_scatter(tmp_x, tmp_y, title, xlabel, ylabel, args):
     x_lst = np.split(tmp_x, np.shape(tmp_x)[1], 1) 
-    x, y = x_lst[0].reshape((tmp_x.shape[0], 1)), x_lst[1].reshape((tmp_x.shape[0], 1))
-    z = tmp_y
-    # Creating figure
-    fig = plt.figure(figsize = (16, 9))
-    ax = plt.axes(projection ="3d")
-     
-    # Add x, y gridlines 
-    ax.grid(b = True, color ='grey', 
-                   linestyle ='-.', linewidth = 0.3, 
-                           alpha = 0.2) 
-      
-     
+    x1, x2 = x_lst[0].reshape((tmp_x.shape[0], 1)), x_lst[1].reshape((tmp_x.shape[0], 1))
+    model_x1 = np.arange(np.min(x1), np.max(x1))
+    scaled_model_x2 = [(-args[0] - single_sample_scale(model_x1_i, tmp_x) * args[1])/args[2] for model_x1_i in model_x1]
+    model_x2 = [single_sample_ascale(scaled_model_x2_i, tmp_x) for scaled_model_x2_i in scaled_model_x2]  
     # Creating plot
-    sctt = ax.scatter3D(x, y, z)
-       
-    plt.title("simple 3D scatter plot")
-    ax.set_xlabel('X-axis', fontweight ='bold') 
-    ax.set_ylabel('Y-axis', fontweight ='bold') 
-    ax.set_zlabel('Z-axis', fontweight ='bold')
+    admitted_x, unadmitted_x = [], []
+    for x_i, y_i in zip(tmp_x, tmp_y):
+        if y_i == 1.0:
+            admitted_x.append(x_i)
+        else:
+            unadmitted_x.append(x_i)
+    
+    plt.scatter(np.array(admitted_x)[:,0], np.array(admitted_x)[:,1], color='red', label='admitted')
+    plt.scatter(np.array(unadmitted_x)[:,0], np.array(unadmitted_x)[:,1], color='blue', label='admitted')
+    plt.legend()
+    plt.plot(model_x1, model_x2, label = 'learned model')   
+    
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     # fig.colorbar(sctt, ax = ax, shrink = 0.5, aspect = 5)
        
     # show plot
     plt.show()
     
+def plot_loss(iter_lst, cost_lst, title):
+    plt.title(title)
+    plt.xlabel('iteration')
+    plt.ylabel('cost')
+    plt.plot(iter_lst, cost_lst, c='red')
+    plt.show()
+    return   
+
 def main():
     # TODO: get data of feature x
     with open('softmax_data/Exam/train/x.txt') as x_file:
         x = open_get(x_file)
-        print(f'x = {x}\n')
 
     # TODO: get data of label y
     with open('softmax_data/Exam/train/y.txt') as y_file:
         y = open_get(y_file)
-        print(f'y = {y}\n')
     
-    # TODO: range of x is larger than y, make feature scaling 
-    scaled_x = feature_scale(np.array(x))
-    gd_predict = gd_solve(scaled_x, np.array(y))
-   
-    # TODO: picture learned model after gradient descent
-    # plot_training_set(np.array(x), np.array(y))
-
     # TODO: get test data set
     with open('softmax_data/Exam/test/x.txt') as test_x_file:
         test_x = open_get(test_x_file)
-        print(f"test_x = {test_x}\n")
 
     with open('softmax_data/Exam/test/y.txt') as test_y_file:
         test_y = open_get(test_y_file)
-        print(f"test_y = {test_y}\n")
+
+    # TODO: range of x is larger than y, make feature scaling 
+    scaled_x = feature_scale(np.array(x))
+    gd_predict, gd_args = gd_solve(scaled_x, np.array(y))
+   
+    # TODO: picture learned model after gradient descent
+    plot_scatter(np.array(x), np.array(y), 'training data set', 'x1', 'x2', gd_args)
+    plot_scatter(np.array(test_x), np.array(test_y), 'Test data set', 'x1', 'x2', gd_args)
+
+
 
     correct = 0
     num_test = len(test_y)
