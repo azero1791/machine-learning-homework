@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # TODO: two-class perceptron class
 class Perceptron2:
 
-    def __init__(self, learn_rate = 0.00001, epochs = 15000, threshold = 0.0):
+    def __init__(self, learn_rate = 1e-4, epochs = 15000, threshold = 0.0):
         self.learn_rate = learn_rate
         self.epochs = epochs
         self.threshold = threshold
@@ -81,8 +81,8 @@ class Perceptron2:
         scaled_x = scale_feature(self.x)
         scaled_x1 = scaled_x[:,0]
         x2 = np.array(self.x[:,1])
-        scaled_x2 = (-self.args[0] - self.args[1]*scaled_x1) / self.args[2]
-        model_x2 = reverse_scale_feature(scaled_x2, x2)
+        scaled_x2 = (- self.args[1]*scaled_x1) / self.args[2]
+        model_x2 = reverse_scale_feature(scaled_x2, x2) - self.args[0]
         plt.plot(np.array(self.x)[:,0], model_x2, color='red')
         plt.show()
 
@@ -97,7 +97,7 @@ class Perceptron2:
 
 # TODO:multi-class perceptron class 
 class Perceptronm:
-    def __init__(self, num_class, train_x, train_y, learn_rate = 0.00001, epochs = 15000):
+    def __init__(self, num_class, train_x, train_y, learn_rate = 1e-4, epochs = 15000):
         self.learn_rate = learn_rate
         self.num_class = 2
         self.epochs = epochs
@@ -189,8 +189,8 @@ class Perceptronm:
         scaled_x1 = scaled_x[:,0]
         x2 = np.array(self.train_x[:,1])
         for class_i, args_i in enumerate(self.args):
-            scaled_x2 = (-args_i[0] - args_i[1]*scaled_x1) / args_i[2]
-            model_x2 = reverse_scale_feature(scaled_x2, x2)
+            scaled_x2 = (- args_i[1]*scaled_x1) / args_i[2]
+            model_x2 = reverse_scale_feature(scaled_x2, x2) - args_i[0] 
             plt.plot(np.array(self.train_x)[:,0], model_x2, color='red', label = f"class-{class_i}")
         plt.legend()
         plt.show()
