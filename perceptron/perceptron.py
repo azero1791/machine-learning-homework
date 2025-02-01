@@ -430,7 +430,7 @@ class Softmax_regression:
             max_class = self.get_max_pro_class(test_x_i)
             if max_class == test_y_i:
                 correct += 1
-        print(f"logic regression with SGD test: {correct / n_sample * 100}%")
+        print(f"softmax regression with SGD test: {correct / n_sample * 100}%")
 
 def prompt(str):
     print('-'*80)
